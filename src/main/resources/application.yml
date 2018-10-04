@@ -1,0 +1,136 @@
+spring:
+  profiles:
+    active: dev
+
+#camel.springboot.shutdownTimeout: 2
+
+camel:
+  springboot:
+    shutdownTimeout: 2
+    health.indicator.enable: true
+
+management:
+  security:
+    enabled: false
+---
+
+spring:
+  profiles: mock
+  mail:
+      host: smtp.gmail.com
+      port: 587
+      username: <<InsertUserID>>
+      password: <<InsertPassword>>
+      properties.mail.smtp.auth: true
+      properties.mail.smtp.starttls.enable: true
+
+mailTo: <<InsertSenderGmailID>>
+mailFrom: <<InsertReceiverID>>
+
+
+
+startRoute: direct:inputDirect
+#Need to keep it since it was refer into the route, so runtime Camel Expect this value to be presented in profile
+fromRoute: file:data/dev/input?delete=true&readLock=none&moveFailed=error
+toRoute1: mock:outputMock
+tojdbcRoute: mock:outputMock1
+toSuccessRoute: mock:outputMock2
+healthCheckRoute: direct:healthCheck
+toSQLNode: mock:outputMock3
+
+
+message: Mock Environment!!
+
+---
+
+spring:
+  profiles: dev
+  datasourceConnInfo:
+    driver-class-name: org.postgresql.Driver
+            #Updated localdb to localdbDeleteMe to generate the exception to validate the health route.
+            #url: jdbc:postgresql://localhost:5432/localdbDeleteMe
+    url: jdbc:postgresql://localhost:5432/localdb
+    username: postgres
+    password: postgres
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: <<InsertUserID>>
+    password: <<InsertPassword>>
+    properties.mail.smtp.auth: true
+    properties.mail.smtp.starttls.enable: true
+
+mailTo: <<InsertSenderGmailID>>
+mailFrom: <<InsertReceiverID>>
+
+fromRoute: timer:restServiceInvokeTimer?period=10s
+toRoute: http://localhost:8081/country
+tojdbcRoute: jdbc:myDataSource
+toSuccessRoute: file:data/dev/output?fileName=SuccessMessage.txt
+healthCheckRoute: timer:healthCheckTimer?period=25s
+toSQLNode: sql:select * from country where country_alpha3code = :#countryIDFromHeader?dataSource=#myDataSource
+
+message: DEV Environment!!
+
+---
+
+spring:
+  profiles: stage
+  datasourceConnInfo:
+    driver-class-name: org.postgresql.Driver
+            #Updated localdb to localdbDeleteMe to generate the exception to validate the health route.
+            #url: jdbc:postgresql://localhost:5432/localdbDeleteMe
+    url: jdbc:postgresql://localhost:5432/localdb
+    username: postgres
+    password: postgres
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: <<InsertUserID>>
+    password: <<InsertPassword>>
+    properties.mail.smtp.auth: true
+    properties.mail.smtp.starttls.enable: true
+
+mailTo: <<InsertSenderGmailID>>
+mailFrom: <<InsertReceiverID>>
+
+fromRoute: timer:restServiceInvokeTimer?period=10s
+toRoute: http://localhost:8081/country
+tojdbcRoute: jdbc:myDataSource
+toSuccessRoute: file:data/dev/output?fileName=SuccessMessage.txt
+healthCheckRoute: timer:healthCheckTimer?period=25s
+toSQLNode: sql:select * from country where country_alpha3code = :#countryIDFromHeader?dataSource=#myDataSource
+
+message: Stage Environment!!
+
+---
+
+spring:
+  profiles: prod
+  datasourceConnInfo:
+    driver-class-name: org.postgresql.Driver
+            #Updated localdb to localdbDeleteMe to generate the exception to validate the health route.
+            #url: jdbc:postgresql://localhost:5432/localdbDeleteMe
+    url: jdbc:postgresql://localhost:5432/localdb
+    username: postgres
+    password: postgres
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: <<InsertUserID>>
+    password: <<InsertPassword>>
+    properties.mail.smtp.auth: true
+    properties.mail.smtp.starttls.enable: true
+
+mailTo: <<InsertSenderGmailID>>
+mailFrom: <<InsertReceiverID>>
+
+fromRoute: timer:restServiceInvokeTimer?period=10s
+toRoute: http://localhost:8081/country
+tojdbcRoute: jdbc:myDataSource
+toSuccessRoute: file:data/dev/output?fileName=SuccessMessage.txt
+healthCheckRoute: timer:healthCheckTimer?period=25s
+toSQLNode: sql:select * from country where country_alpha3code = :#countryIDFromHeader?dataSource=#myDataSource
+
+message: Production Environment!!
+---
